@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 
 from django.views.generic import View
-from django import http
 from django.template import RequestContext, loader
 from django.shortcuts import render_to_response
+
+from .. import http
 
 
 class GenericView(View):
@@ -29,7 +30,7 @@ class GenericView(View):
 
         if template:
             _context = self.get_context_data()
-            _context.update(context)
+            _context.update(context or {})
 
             context_instance = RequestContext(self.request)
             output_data = loader.render_to_string(
