@@ -2,6 +2,8 @@
 
 import re
 
+from django.conf import settings
+
 SUPERTOOLS_MENU_CSS_ACTIVE = getattr(settings, 'SUPERTOOLS_MENU_CSS_ACTIVE', '')
 
 attr_rx1 = re.compile(r"^in_(.+)$", flags=re.U)
