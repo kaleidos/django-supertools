@@ -2,7 +2,6 @@
 
 from django.views.generic import View
 from django.template import RequestContext, loader
-from django.shortcuts import render_to_response
 
 from .. import http
 
