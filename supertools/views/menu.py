@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+# This module is currently untested and deprecated.
+
 import re
 
 from django.conf import settings
