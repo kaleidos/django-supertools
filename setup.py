@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 
 setup(
     name = 'django-supertools',
-    version = "0.2",
+    version = "0.3",
     description = "Generic tools for django apps.",
     long_description = "",
     keywords = 'django',
