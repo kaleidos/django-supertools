@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import absolute_import
+
 import datetime
 import json
 
@@ -28,5 +30,9 @@ class LazyEncoder(DjangoJSONEncoder):
         return super(LazyEncoder, self).default(obj)
 
 
-def to_json(data, **kwargs):
-    return json.dumps(data, cls=LazyEncoder, **kwargs)
+def dumps(data, ensure_ascii=True, cls=LazyEncoder, **kwargs):
+    return json.dumps(data, cls=cls, ensure_ascii=ensure_ascii, **kwargs)
+
+
+def loads(data):
+    return json.loads(data)

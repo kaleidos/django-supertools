@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+from __future__ import absolute_import, print_function
+
 from .. import json
 from .. import exceptions as exc
 
@@ -12,13 +15,14 @@ class AjaxMixin(object):
         if isinstance(exception, exc.WrongArguments):
             return self.render_json(ctx,  status_code=http.HTTP_400_BAD_REQUEST)
 
-        return super().handle_exception(exception)
+        return super(AjaxMixin, self).handle_exception(exception)
 
-    def render_json(self, data, *, content_type=None, status_code=None):
+    def render_json(self, data, content_type=None, status_code=None):
         if content_type is None:
             content_type = "application/json"
 
-        return self.render(data=json.to_json(data),
+        return self.render(data=json.dumps(data),
                            content_type=content_type,
                            status_code=status_code)
+
 

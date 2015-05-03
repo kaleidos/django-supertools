@@ -74,59 +74,85 @@ HTTP_504_GATEWAY_TIMEOUT = 504
 HTTP_505_HTTP_VERSION_NOT_SUPPORTED = 505
 HTTP_511_NETWORK_AUTHENTICATION_REQUIRED = 511
 
+class HttpResponse(HttpResponse):
+    def __init__(self, content="", *args, **kwarg):
+        self.content_data = content
+        super(HttpResponse, self).__init__(content, *args, **kwarg)
 
-class HttpCreated(HttpResponse):
+    @property
+    def content_data(self):
+        return self.__content_data
+
+    @content_data.setter
+    def content_data(self, value):
+        self.__content_data = value
+
+
+class Ok(HttpResponse):
+    status_code = HTTP_200_OK
+
+class Created(HttpResponse):
     status_code = HTTP_201_CREATED
 
-class HttpAccepted(HttpResponse):
+class Accepted(HttpResponse):
     status_code = HTTP_202_ACCEPTED
 
-class HttpNoContent(HttpResponse):
+class NoContent(HttpResponse):
     status_code = HTTP_204_NO_CONTENT
 
-class HttpMultipleChoices(HttpResponse):
+class MultipleChoices(HttpResponse):
     status_code = HTTP_300_MULTIPLE_CHOICES
 
-class HttpRedirect(HttpResponseRedirect):
-    status_code = HTTP_302_FOUND
-
-class HttpPermanentRedirect(HttpResponsePermanentRedirect):
+class MovedPermanently(HttpResponsePermanentRedirect):
     status_code = HTTP_301_MOVED_PERMANENTLY
 
-class HttpSeeOther(HttpResponse):
+class Redirect(HttpResponseRedirect):
+    status_code = HTTP_302_FOUND
+
+class SeeOther(HttpResponse):
     status_code = HTTP_303_SEE_OTHER
 
-class HttpNotModified(HttpResponse):
+class NotModified(HttpResponse):
     status_code = HTTP_304_NOT_MODIFIED
 
-class HttpBadRequest(HttpResponse):
+class TemporaryRedirect(HttpResponse):
+    status_code = HTTP_307_TEMPORARY_REDIRECT
+
+class BadRequest(HttpResponse):
     status_code = HTTP_400_BAD_REQUEST
 
-class HttpUnauthorized(HttpResponse):
+class Unauthorized(HttpResponse):
     status_code = HTTP_401_UNAUTHORIZED
 
-class HttpForbidden(HttpResponse):
+class Forbidden(HttpResponse):
     status_code = HTTP_403_FORBIDDEN
 
-class HttpNotFound(HttpResponse):
+class NotFound(HttpResponse):
     status_code = HTTP_404_NOT_FOUND
 
-class HttpMethodNotAllowed(HttpResponse):
+class MethodNotAllowed(HttpResponse):
     status_code = HTTP_405_METHOD_NOT_ALLOWED
 
-class HttpConflict(HttpResponse):
+class NotAcceptable(HttpResponse):
+    status_code = HTTP_406_NOT_ACCEPTABLE
+
+class Conflict(HttpResponse):
     status_code = HTTP_409_CONFLICT
 
-class HttpGone(HttpResponse):
+class Gone(HttpResponse):
     status_code = HTTP_410_GONE
 
-class HttpTooManyRequests(HttpResponse):
+class PreconditionFailed(HttpResponse):
+    status_code = HTTP_412_PRECONDITION_FAILED
+
+class UnsupportedMediaType(HttpResponse):
+    status_code = HTTP_415_UNSUPPORTED_MEDIA_TYPE
+
+class TooManyRequests(HttpResponse):
     status_code = HTTP_429_TOO_MANY_REQUESTS
 
-class HttpApplicationError(HttpResponse):
+class InternalServerError(HttpResponse):
     status_code = HTTP_500_INTERNAL_SERVER_ERROR
 
-class HttpNotImplemented(HttpResponse):
+class NotImplemented(HttpResponse):
     status_code = HTTP_501_NOT_IMPLEMENTED
-
-

@@ -1,5 +1,7 @@
+from __future__ import absolute_import
+
 from django.core.urlresolvers import reverse
-from django.views.generic import View
+from django.views.generic import View as DjangoView
 from django.template import RequestContext
 from django.template.loader import render_to_string
 from django.shortcuts import render_to_response
@@ -8,23 +10,24 @@ from .. import http
 from .. import exceptions as exc
 
 
-class GenericView(View):
-    response_cls = http.HttpResponse
+class View(DjangoView):
+    response_cls = http.Ok
     content_type = "text/html"
     permissions = ()
 
-    def handle_exception(self, exception):
+    def handle_exception(self, e):
         """
         Ad-hoc exception handling for all derived views.
         """
-        ctx = {"exception": exception}
-
-        if isinstance(exception, exc.RedirectRequired):
-            return self.redirect(url=exception.detail)
-        elif isinstance(exception, exc.IntegrityError):
-            return http.HttpConflict(exception)
-
-        return exception
+        if isinstance(e, exc.Redirect):
+            return e.response_class(headers={"Location": e.content})
+        elif isinstance(e, exc.RedirectPermanent):
+            return e.response_class(headers={"Location": e.content})
+        elif isinstance(e, exc.IntegrityError):
+            return e.response_class(e.content)
+        elif isinstance(e, exc.MethodNotAllowed):
+            return e.response_class(headers={"Allow": e.content})
+        return e
 
     def init(self, request, *args, **kwargs):
         pass
@@ -51,20 +54,20 @@ class GenericView(View):
             result = self.__handle_permissions()
             if isinstance(result, http.HttpResponse):
                 return result
-            return super().dispatch(request, *args, **kwargs)
+            return super(View, self).dispatch(request, *args, **kwargs)
         except Exception as e:
             response = self.handle_exception(e)
             if isinstance(response, Exception):
                 raise
             return response
 
-    def redirect(self, reverseurl=None, *, url=None, args=None, kwargs=None):
+    def redirect(self, reverseurl=None, url=None, args=None, kwargs=None):
         """
         Simple redirect helper.
         """
         if not url:
             url = reverse(reverseurl, args=args, kwargs=kwargs)
-        return http.HttpRedirect(url)
+        return http.Redirect(url)
 
     def render(self, template=None, context=None, data=None,
                response_cls=None, content_type=None, status_code=None):
@@ -92,7 +95,7 @@ class GenericView(View):
         return response
 
 
-class GenericTemplateView(GenericView):
+class TemplateView(View):
     tmpl_name = None
 
     def get(self, request, *args, **kwargs):

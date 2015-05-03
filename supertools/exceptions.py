@@ -9,18 +9,41 @@ from django.db import IntegrityError
 from django.shortcuts import resolve_url
 
 
+from . import http
+
+
 class BaseException(Exception):
-    default_detail = _("Unexpected error")
+    default_content = _("Unexpected error")
+    response_class = http.BadRequest
 
     def __init__(self, detail=None):
-        self.detail = detail or self.default_detail
+        self.content = detail or self.default_content
 
-    def __str__(self):
-        return force_text(self.detail)
+
+class UnsupportedMediaType(BaseException):
+    response_class = http.UnsupportedMediaType
+
+
+class MethodNotAllowed(BaseException):
+    response_class = http.MethodNotAllowed
+
+
+class NotAcceptable(BaseException):
+    response_class = http.NotAcceptable
 
 
 class NotFound(BaseException, Http404):
-    default_detail = _("Not found.")
+    default_content = _("Not found.")
+    response_class = http.NotFound
+
+
+class Forbidden(BaseException, DjangoPermissionDenied):
+    response_class = http.Forbidden
+    default_content = _("Permission denied")
+
+
+class Unauthorized(BaseException):
+    response_class = http.Unauthorized
 
 
 class BadRequest(BaseException):
@@ -28,28 +51,29 @@ class BadRequest(BaseException):
 
 
 class WrongArguments(BadRequest):
-    default_detail = _("Wrong arguments.")
+    default_content = _("Wrong arguments.")
 
 
 class ValidationError(BadRequest):
-    default_detail = _("Data validation error")
+    default_content = _("Data validation error")
 
 
-class PermissionDenied(BaseException, DjangoPermissionDenied):
-    default_detail = _("Permission denied")
+class Redirect(BaseException):
+    response_class = http.TemporaryRedirect
 
 
-class RedirectRequired(BaseException):
-    def __init__(self, *args, **kwargs):
-        self.detail = reverse(*args, **kwargs)
+class RedirectPermanent(BaseException):
+    response_class = http.MovedPermanently
 
 
-class IntegrityError(BaseException, IntegrityError):
-    default_detail = _("Integrity Error for wrong or invalid arguments")
+class IntegrityError(BaseException):
+    default_content = _("Integrity Error for wrong or invalid arguments")
+    response_class = http.Conflict
 
 
 class InternalError(BaseException):
-    default_detail = _("Internal server error")
+    default_content = _("Internal server error")
+    response_class = http.InternalServerError
 
 
 @contextmanager
