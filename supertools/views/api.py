@@ -7,7 +7,7 @@ import inspect
 from django.conf import settings
 from django.utils import six
 from django.utils.functional import Promise
-from django.utils.datastructures import MergeDict
+from django.views.decorators.csrf import csrf_exempt
 
 from .. import json
 from .. import http
@@ -18,7 +18,6 @@ from .. import negotiation
 
 class ApiMixin(object):
     serializers = None
-    allow_multipart = False
 
     def __init__(self, *args, **kwarg):
         super(ApiMixin, self).__init__(*args, **kwarg)
@@ -43,19 +42,20 @@ class ApiMixin(object):
 
             self.serializers = serializers.SerializersContainer(*_serializers)
 
+    @csrf_exempt
     def dispatch(self, request, *args, **kwargs):
         response_content_type = self.serializers.get_default_content_type()
 
         try:
             content_type = request.META.get("CONTENT_TYPE", response_content_type)
-            if "multipart/form-data" in content_type and self.allow_multipart:
-                request.data = MergeDict(request.POST, request.FILES)
-            elif request.body:
+            content_length = request.META.get("CONTENT_LENGTH", "")
+
+            if content_length:
                 content_type_serializer = self.serializers.get_by_content_type(content_type)
                 if content_type_serializer is None:
-                    raise exc.UnsupportedMediaType()
+                    raise exc.UnsupportedMediaType("Unsupported Media Type")
                 else:
-                    request.data = content_type_serializer.loads(request.body, request)
+                    request.data = content_type_serializer.loads(request)
 
             media_types = negotiation.parse_media_range(request.META.get("HTTP_ACCEPT", "*/*"))
             serializers_media_range = ",".join(s.content_type for s in self.serializers)

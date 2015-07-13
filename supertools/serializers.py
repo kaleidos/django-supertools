@@ -8,8 +8,12 @@ data, for example, as json, html and others.
 from __future__ import absolute_import
 
 import json
+
 from django.conf import settings
 from django.template.loader import get_template
+from django.utils import six
+from django.utils.datastructures import MergeDict
+from django.utils.functional import cached_property
 
 from .json import LazyEncoder
 
@@ -63,7 +67,7 @@ class Serializer(object):
     """
     content_type = None
 
-    def loads(self, data, request=None):
+    def loads(self, data=None, request=None):
         raise NotImplementedError
 
     def dumps(self, data, request=None, response=None):
@@ -77,9 +81,16 @@ class Json(Serializer):
     """Transform between json-encoded text and python built-in data types."""
     content_type = "application/json"
 
-    def loads(self, data, request=None):
-        if not isinstance(data, str):
+    def loads(self, request, data=None):
+        if data is None:
+            data = request.body
+
+        if not data:
+            return None
+
+        if not isinstance(data, six.binary_type):
             data = data.decode(get_request_encoding(request))
+
         return json.loads(data)
 
     def dumps(self, data, request=None, response=None):
@@ -90,7 +101,19 @@ class Json(Serializer):
         return self.content_type in content_type or "+json" in content_type
 
 
+class MultiPart(Serializer):
+    """Allow multipart requests. This serializer only serves for request decoding."""
+    content_type = "multipart/form-data"
+
+    def loads(self, request, data=None):
+        return MergeDict(request.POST, request.FILES)
+
+    def accepts_content_type(self, content_type):
+        return self.content_type in content_type
+
+
 class PrettyJson(Json):
+
     def dumps(self, data, request=None, response=None):
         return json.dumps(data, cls=LazyEncoder, indent=4, sort_keys=True)
 
@@ -102,8 +125,13 @@ class HtmlJson(Serializer):
     template_name = "http/api.html"
 
     def __init__(self, template_name=None):
-        self.template = get_template(template_name or self.template_name)
+        if template_name:
+            self.template_name = template_name
         self.json = PrettyJson()
+
+    @cached_property
+    def template(self):
+        return get_template(self.template_name)
 
     def dumps(self, data, request=None, response=None):
         return self.template.render({
