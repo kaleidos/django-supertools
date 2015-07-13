@@ -7,6 +7,7 @@ And RFC 6585 - http://tools.ietf.org/html/rfc6585
 Code taken from django rest framework.
 """
 
+from django.http.response import HttpResponseBase
 from django.http import HttpResponse
 from django.http import HttpResponseRedirect
 from django.http import HttpResponsePermanentRedirect

@@ -2,9 +2,7 @@ from __future__ import absolute_import
 
 from django.core.urlresolvers import reverse
 from django.views.generic import View as DjangoView
-from django.template import RequestContext
-from django.template.loader import render_to_string
-from django.shortcuts import render_to_response
+from django.template.loader import render_to_string, get_template
 
 from .. import http
 from .. import exceptions as exc
@@ -40,7 +38,7 @@ class View(DjangoView):
     def __handle_permissions(self):
         for fn in self.permissions:
             result = fn(self)
-            if isinstance(result, http.HttpResponse):
+            if isinstance(result, http.HttpResponseBase):
                 return result
             elif result == False:
                 raise exc.PermissionDenied("Forbidden")
@@ -50,9 +48,11 @@ class View(DjangoView):
 
     def dispatch(self, request, *args, **kwargs):
         try:
-            self.init(request, *args, **kwargs)
+            result = self.init(request, *args, **kwargs)
+            if isinstance(result, http.HttpResponseBase):
+                return result
             result = self.__handle_permissions()
-            if isinstance(result, http.HttpResponse):
+            if isinstance(result, http.HttpResponseBase):
                 return result
             return super(View, self).dispatch(request, *args, **kwargs)
         except Exception as e:
@@ -71,16 +71,14 @@ class View(DjangoView):
 
     def render(self, template=None, context=None, data=None,
                response_cls=None, content_type=None, status_code=None):
-
         output_data = data or b""
 
         if template:
             _context = self.get_context_data()
             _context.update(context or {})
 
-            context_instance = RequestContext(self.request)
-            output_data = render_to_string(template, _context,
-                                           context_instance=context_instance)
+            template = get_template(template)
+            output_data = template.render(_context, request=self.request)
 
         if content_type is None:
             content_type = self.content_type
