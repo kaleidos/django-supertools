@@ -12,7 +12,6 @@ import json
 from django.conf import settings
 from django.template.loader import get_template
 from django.utils import six
-from django.utils.datastructures import MergeDict
 from django.utils.functional import cached_property
 
 from .json import LazyEncoder
@@ -20,6 +19,11 @@ from .json import LazyEncoder
 
 def get_request_encoding(request):
     return getattr(request, "encoding", None) or settings.DEFAULT_CHARSET
+
+
+def merge_dict(a, b):
+    #NOTE: In future python 3.5 (PEP 476) -> z = {**x, **y}
+    return a.copy().update(b)
 
 
 class SerializersContainer(object):
@@ -106,7 +110,7 @@ class MultiPart(Serializer):
     content_type = "multipart/form-data"
 
     def loads(self, request, data=None):
-        return MergeDict(request.POST, request.FILES)
+        return merge_dict(request.POST, request.FILES)
 
     def accepts_content_type(self, content_type):
         return self.content_type in content_type
